@@ -1,0 +1,23 @@
+Core cyptrography steps
+
+Step 1: encrypt the MASTER key. use libsodiums argon2id encryption to run the key through it. 
+needs a salt that is created on vault creation to avoid 2 vaults with same master deriving same key.
+needs cost parameters to dtermine the strength of the derviation. higher cost = more expensive to brute force
+outputs a fixed length key 32 bytes that the aead cipher needs in lives in secure memory.
+aead is an encryption method taht scrambles data while also checking its integrity (makes sure it hasnt been changed). the encryption (scrambling) is done with the master key we return that is ALSO encrypted
+
+step 2: encryptig the vault data with aead . we need:
+a nonce (number used once): 24  byte unique per encryption. used to prevent replay attacks. attacker cannot intercept passwrod and reuse it lateer.
+auth tag: tag 16 bytes is used to check the integrity. all cipertext has this tag and on decrypt the tag is verified to see if it was tampered with.
+
+
+derived key and decrypted plaintext need to live in SecureBuffer (from secure_buffer.h) rather than a raw vector. this needs to be done first
+
+the problem with storing in a vector and string is that when the vector/string is destroyed, it does not overwrite the bytes first.
+the freed memory still contains your text until that freed memory is reallocated. reading process memory can expose it.
+heap memory can be paged to a pagefile if memory is capped. its swappable and will just stay on a FILE!!! thats crazy
+zeroing myself isnt reliable i guess? the compiler could eliminate that zeroing logic since it deems it unoptimal lol. 
+sodium_memzero() is implemented specifically so the compiler cant not use it for optimization.
+theyre also copyable by default. 
+this is mainly used to avoid the case where crash dump writes to file or a pagefile, if someones reading my proess memory im still cooked
+
