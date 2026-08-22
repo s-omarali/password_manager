@@ -21,3 +21,10 @@ sodium_memzero() is implemented specifically so the compiler cant not use it for
 theyre also copyable by default. 
 this is mainly used to avoid the case where crash dump writes to file or a pagefile, if someones reading my proess memory im still cooked
 
+
+
+The actual lifecycle
+First run (vault creation): generate a random salt, derive a key from your master password via Argon2id + that salt, encrypt an empty entry list, write salt + nonce + ciphertext to the vault file. Program can now close — nothing is lost, it's on disk.
+Reopening later: program starts with nothing in memory. You type your master password. The program reads the salt back out of the vault file, re-runs Argon2id with your password + that same salt — deterministic, so the same password + same salt always reproduces the same key — and uses that key to decrypt the file's ciphertext back into an in-memory entry list.
+While unlocked: you view/add/edit entries — all of this only touches the in-memory copy.
+On save/lock/close: the (possibly modified) entry list gets re-serialized and re-encrypted — with a fresh random nonce each time (nonces can never repeat under the same key, even though the key itself doesn't change between saves) — and written back to the file. The in-memory plaintext then gets dropped, and SecureBuffer's zeroing kicks in.
