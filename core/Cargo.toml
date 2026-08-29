@@ -9,6 +9,6 @@ name = "vault_core"
 [dependencies]
 zeroize = { version = "1", features = ["derive"] }
 argon2 = "0.5"
-password-hash = "0.5"
+password-hash = {version = "0.5" , features = ["getrandom"]}
 
 
