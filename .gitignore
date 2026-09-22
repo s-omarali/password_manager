@@ -1,3 +1,7 @@
 build/
 compile_commands.json
 target/
+.claude
+.vscode
+.clang-tidy
+.txt
